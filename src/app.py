@@ -88,9 +88,73 @@ def get_usuarios():
     result= list(map(lambda usuarios:usuarios.serialize(),response_body))
     return jsonify(result), 200
 
-    
+
+@app.route('/usuarios/favorites/<int:user_id>', methods=['GET'])
+def get_usuarios_favoritos(user_id):
+
+    response_body = Favoritos.query.filter_by(user_id=user_id).all()
+    if response_body==[]:
+        return jsonify({"msg":"No existe ningun favorito para este usuario"}), 404
+    result= list(map(lambda usuarios:usuarios.serialize(),response_body))
+    return jsonify(result), 200
     
 
+@app.route('/favorite/planet/<int:planet_id>', methods=['POST',"DELETE"])
+def post_planetas_favoritos(planet_id):
+    
+    body = request.json
+    email = body.get("email")
+    user = Usuarios.query.filter_by(mail=email).first()
+    if user is None:
+        return jsonify({"msg":"No existe ningun usuario"}), 404
+    planeta = Planetas.query.filter_by(id=planet_id).first()
+    if planeta is None:
+        return jsonify({"msg":"No existe ningun planeta"}), 404
+    
+    if request.method=="POST":
+        new_favorite = Favoritos(
+            user_id=user.id,
+            planetas_id=planet_id
+        )
+        db.session.add(new_favorite)
+        db.session.commit()
+        return jsonify(new_favorite.serialize()), 201
+    if request.method=="DELETE":
+        favorite_delete = Favoritos.query.filter_by(user_id=user.id,planetas_id=planet_id).first()
+        if favorite_delete is None:
+            return jsonify({"msg":"no existe el favorito"}), 404
+        db.session.delete(favorite_delete)
+        db.session.commit()
+        return jsonify({"msg":"favorito eliminado"}), 200
+    
+@app.route('/favorite/personajes/<int:personajes_id>', methods=['POST',"DELETE"])
+def post_personajes_favoritos(personajes_id):
+    
+    body = request.json
+    email = body.get("email")
+    user = Usuarios.query.filter_by(mail=email).first()
+    if user is None:
+        return jsonify({"msg":"No existe ningun usuario"}), 404
+    personaje = Personajes.query.filter_by(id=personajes_id).first()
+    if personaje is None:
+        return jsonify({"msg":"No existe ningun personaje"}), 404
+    
+    if request.method=="POST":  
+        new_favorite = Favoritos(
+            user_id=user.id,
+            personajes_id=personajes_id
+        )
+        db.session.add(new_favorite)
+        db.session.commit()
+        return jsonify(new_favorite.serialize()), 201   
+    
+    if request.method=="DELETE":
+        favorite_delete = Favoritos.query.filter_by(user_id=user.id,personajes_id=personajes_id).first()
+        if favorite_delete is None:
+            return jsonify({"msg":"no existe el favorito"}), 404
+        db.session.delete(favorite_delete)
+        db.session.commit()
+        return jsonify({"msg":"favorito eliminado"}), 200
 
 
 # this only runs if `$ python src/app.py` is executed

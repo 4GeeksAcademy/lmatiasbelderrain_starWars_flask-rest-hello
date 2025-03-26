@@ -60,15 +60,18 @@ class Favoritos(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
     user = relationship("Usuarios", back_populates="favoritos")
-    personajes_id: Mapped[int] = mapped_column(ForeignKey("personajes.id"))
+    
+    # Permitir que 'personajes_id' y 'planetas_id' sean nulos
+    personajes_id: Mapped[int | None] = mapped_column(ForeignKey("personajes.id"), nullable=True)
     personajes = relationship("Personajes", back_populates="favoritos")
-    planetas_id: Mapped[int] = mapped_column(ForeignKey("planetas.id"))
+    
+    planetas_id: Mapped[int | None] = mapped_column(ForeignKey("planetas.id"), nullable=True)
     planetas = relationship("Planetas", back_populates="favoritos")
 
     def serialize(self):
         return {
             "id": self.id,
-            "user_id": self.user_id,
-            "personajes_id": self.personajes_id,
-            "planetas_id": self.planetas_id,
+            "user_id": self.user.serialize() if self.user != None else " ",
+            "personajes_id": self.personajes.serialize() if self.personajes != None else " ",
+            "planetas_id": self.planetas.serialize() if self.planetas != None else " ",
         }
